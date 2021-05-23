@@ -25,6 +25,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -68,9 +69,12 @@ public class HomeFragment extends Fragment {
                 if (dayOfMonth != currDate) {
                     // get text from the previous selected day
                     String text = et.getText().toString();
-                    if (!text.equals(content)) { // content was updated
+                    if (content.equals("") && !text.equals("")) {
+                        entries.put(currDate, text);
+                        updateNotes(currDate, text);
+                    } else if (!text.equals(content)) { // content was updated
                         entries.replace(currDate, text);
-                        updateNotes();
+                        updateNotes(currDate, text);
                     }
 
                     currDate = dayOfMonth;
@@ -86,7 +90,7 @@ public class HomeFragment extends Fragment {
     }
 
     private void getUserData() {
-        String url = "http://139.177.198.184:3000/user?name=Sam";
+        String url = "http://139.177.198.184:3000/user?name=Same";
 
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
                 response -> {
@@ -115,19 +119,15 @@ public class HomeFragment extends Fragment {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    private void updateNotes() {
-        String url = "http://139.177.198.184:3000/user/";
+    private void updateNotes(int date, String notes) {
+        String url = "http://139.177.198.184:3000/user/calendar";
         JSONObject postData = new JSONObject();
-
-        entries.forEach((k, v) -> {
-            Log.d("Calendar Screen", "Notes entry: " + v);
-        });
+        JSONArray calData = new JSONArray();
 
         try {
-            postData.put("name", "Sam");
-            postData.put("userID", "hello");
-            postData.put("checkIns", checkIns);
-            postData.put("calendar", new JSONArray(entries.toString()));
+            postData.put("name", "Same");
+            postData.put("date", date);
+            postData.put("notes", notes);
         } catch (JSONException e) {
             e.printStackTrace();
         }
