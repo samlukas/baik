@@ -12,7 +12,6 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.example.baik.R;
 import com.example.baik.databinding.FragmentNotificationsBinding;
 
 public class NotificationsFragment extends Fragment {
@@ -35,6 +34,7 @@ public class NotificationsFragment extends Fragment {
                 textView.setText(s);
             }
         });
+
         return root;
     }
 
