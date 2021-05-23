@@ -20,15 +20,18 @@ import com.android.volley.toolbox.Volley;
 import com.example.baik.R;
 import com.example.baik.databinding.FragmentNotificationsBinding;
 import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.Description;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.utils.EntryXComparator;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class NotificationsFragment extends Fragment {
@@ -39,6 +42,8 @@ public class NotificationsFragment extends Fragment {
 
     private checkIn[] checkIns;
     LineChart sleepHoursChart;
+    LineChart sleepQualityChart;
+    LineChart moodChart;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -57,6 +62,11 @@ public class NotificationsFragment extends Fragment {
         });
 
         sleepHoursChart = root.findViewById(R.id.sh_chart);
+        sleepHoursChart.setDescription(new Description());
+        sleepQualityChart = root.findViewById(R.id.sq_chart);
+        sleepQualityChart.setDescription(new Description());
+        moodChart = root.findViewById(R.id.mood_chart);
+        moodChart.setDescription(new Description());
 
         queue = Volley.newRequestQueue(getContext());
         getUserData();
@@ -65,23 +75,48 @@ public class NotificationsFragment extends Fragment {
     }
 
     private void initGraphs() {
-        int count = 0;
         List<Entry> sleepHourEntries = new ArrayList<Entry>();
         for (checkIn c : checkIns) {
             // turn your data into Entry objects
-            if (c.date != 18 || (count < 1)) {
-                sleepHourEntries.add(new Entry(c.date, c.sleepHours));
-            }
-            if (c.date == 18) count++;
+            sleepHourEntries.add(new Entry(c.date, c.sleepHours));
         }
-        LineDataSet dataSet = new LineDataSet(sleepHourEntries, "Label");
+
+        Collections.sort(sleepHourEntries, new EntryXComparator());
+        LineDataSet dataSet = new LineDataSet(sleepHourEntries, "");
+        dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER);
         LineData lineData = new LineData(dataSet);
         sleepHoursChart.setData(lineData);
         sleepHoursChart.invalidate(); // refresh
+
+        List<Entry> sleepQualityEntries = new ArrayList<Entry>();
+        for (checkIn c : checkIns) {
+            // turn your data into Entry objects
+            sleepQualityEntries.add(new Entry(c.date, c.sleepQuality));
+        }
+
+        Collections.sort(sleepQualityEntries, new EntryXComparator());
+        LineDataSet SQdataSet = new LineDataSet(sleepQualityEntries, "");
+        SQdataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER);
+        LineData SQlineData = new LineData(SQdataSet);
+        sleepQualityChart.setData(SQlineData);
+        sleepQualityChart.invalidate(); // refresh
+
+        List<Entry> moodEntries = new ArrayList<Entry>();
+        for (checkIn c : checkIns) {
+            // turn your data into Entry objects
+            moodEntries.add(new Entry(c.date, c.mood));
+        }
+
+        Collections.sort(moodEntries, new EntryXComparator());
+        LineDataSet MdataSet = new LineDataSet(moodEntries, "");
+        MdataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER);
+        LineData MlineData = new LineData(MdataSet);
+        moodChart.setData(MlineData);
+        moodChart.invalidate(); // refresh
     }
 
     private void getUserData() {
-        String url = "http://139.177.198.184:3000/user?name=Same";
+        String url = "http://139.177.198.184:3000/user?name=Sam";
 
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
                 response -> {
@@ -89,8 +124,9 @@ public class NotificationsFragment extends Fragment {
                         JSONObject res = new JSONObject(response);
                         JSONObject user = (JSONObject) res.get("user");
                         JSONArray checks = (JSONArray) user.get("checkIns");
-                        
-                        checkIns = new checkIn[Math.min(checks.length(), 0)];
+                        Log.d("Graphs Screen", "CheckIns length: " + checks.length());
+
+                        checkIns = new checkIn[checks.length()];
 
                         for (int i = 0; i < checks.length(); i++) {
                             JSONObject obj = checks.getJSONObject(i);
